@@ -1,20 +1,67 @@
 import React, { Component } from "react";
+import _ from "lodash";
 import { getMovie, getMovies, deleteMovie } from "../services/fakeMovieService";
-import Like from "./common/like";
+import Pagination from "./common/pagination";
+import Paginate from "../utilities/paginate";
+import SideBar from "./sidebar";
+import { getGenres } from "../services/fakeGenreService";
+import FilteredMovies from "../utilities/filter";
+import MovieTable from "./movieTable";
 
 export default class Movies extends Component {
   state = {
     movies: getMovies(),
+    genres: getGenres(),
+    pageSize: 4,
+    currentPage: 1,
+    currentGenre: "All Genre",
+    sortColumn : {
+      path : 'title',
+      order: 'asc',
+    }
   };
 
   render() 
   {
-    return this.state.movies.length === 0 ? <p>There are no Movies in the Database</p> : this.tableFunction();
+    const count = this.state.movies.length;
+    const {currentPage, pageSize, movies, currentGenre, sortColumn} = this.state;
+    const filteredMovies = FilteredMovies (currentGenre, movies);
+    const sorted = _(filteredMovies).orderBy([sortColumn.path],[sortColumn.order])
+    const movieWithPages = Paginate(currentPage, pageSize, sorted);
+
+    return (
+    <React.Fragment>
+      { count=== 0 ? <p>There are no Movies in the Database</p> : 
+      <div className="row m-3" >
+      <div className="col-2">
+      <SideBar genres={this.state.genres} 
+      onSidebarChange={this.onSidebarChange} 
+      currentGenre={currentGenre}/>
+      </div>
+      <div className="col">
+      <h6>The Number of Movies available in Database : {count} Movies</h6>
+      <MovieTable movieWithPages = {movieWithPages} onLiked ={this.onLiked} deleteMovie = {this.deleteMovie} onSort={this.handleSort} sortColumn={sortColumn}/>
+      <Pagination currentPage={currentPage} onPageChange={this.pageSelect} movieCount={filteredMovies.length} pageSize={pageSize}/>
+      </div> 
+    </div> }
+    </React.Fragment>)
+  }
+
+  pageSelect = (page) => {
+      this.setState({currentPage : page});
+  }
+
+  handleSort = (sortColumn) => {
+    this.setState({sortColumn});
   }
 
   deleteMovie = (movie) => {
    const movies = this.state.movies.filter(del => del._id !== movie._id);
    this.setState({movies});    
+  }
+
+  onSidebarChange = (name) => {
+    this.setState({currentGenre: name, currentPage: 1});
   }
 
   onLiked = (movie) => {
@@ -25,41 +72,5 @@ export default class Movies extends Component {
     this.setState({movies});
   }
 
-  tableFunction = () => {
-    return (
-    <React.Fragment>
-      <h6>The Number of Movies available in Database : {this.state.movies.length} Movies</h6>
-      <table className="table">
-        <thead>
-          <tr>
-            <th scope="col">ID</th>
-            <th scope="col">Title</th>
-            <th scope="col">Genre</th>
-            <th scope="col">Stock</th>
-            <th scope="col">RentalRate</th>
-            <th></th>
-            <th></th>
-          </tr>
-        </thead>
-        {this.state.movies.map((movie, index) => (
-          <tbody>
-            <tr key={movie._id}>
-              <td >{index+1}</td>
-              <td >{movie.title}</td>
-              <td >{movie.genre.name}</td>
-              <td >{movie.numberInStock}</td>
-              <td >{movie.dailyRentalRate}</td>
-              <td> <Like onClick = {()=>this.onLiked(movie)} liked = {movie.liked}/></td>
-              <td >
-                <button onClick={ () =>this.deleteMovie(movie)} className="btn btn-danger">
-                  Delete
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        ))}
-      </table>
-    </React.Fragment>
-    );
-  };
+ 
 }
