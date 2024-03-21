@@ -7,6 +7,8 @@ import SideBar from "./sidebar";
 import { getGenres } from "../services/fakeGenreService";
 import FilteredMovies from "../utilities/filter";
 import MovieTable from "./movieTable";
+import NavBar from "./navbar";
+import MovieNavbar from "./common/movieNavbar";
 
 export default class Movies extends Component {
   state = {
@@ -31,6 +33,7 @@ export default class Movies extends Component {
 
     return (
     <React.Fragment>
+      <MovieNavbar  />
       { count=== 0 ? <p>There are no Movies in the Database</p> : 
       <div className="row m-3" >
       <div className="col-2">

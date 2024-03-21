@@ -3,6 +3,13 @@ import _ from 'lodash';
 
 class TableBody extends Component {
 
+    renderCell = (movie,column) => {
+        if(column.content)
+            return column.content(movie);
+        else
+            return _.get(movie, column.path);
+    }
+
     render() { 
         const { data,columns} = this.props;
         return (
@@ -11,7 +18,7 @@ class TableBody extends Component {
                     <tr key={movie._id}>
                         {columns.map(column =>
                         <td key={movie._id + (column.path || column.key)}>
-                        {_.get(movie, column.path)||column.content(movie)}</td>)}</tr>
+                        {this.renderCell(movie,column)}</td>)}</tr>
                 )}
             </tbody>
 
